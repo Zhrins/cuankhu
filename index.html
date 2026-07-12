@@ -1,0 +1,2069 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Cuanki - Hub Kerja Mikro</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2">
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js">
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        :root {
+            --bg-main: #f0f4ff;
+            --bg-card: #ffffff;
+            --bg-card-hover: #f8faff;
+            --bg-input: #f1f5f9;
+            --bg-nav: #ffffff;
+            --text-primary: #0f172a;
+            --text-secondary: #475569;
+            --text-muted: #94a3b8;
+            --border: #e2e8f0;
+            --shadow: 0 4px 24px rgba(79, 70, 229, 0.08);
+            --shadow-hover: 0 8px 40px rgba(79, 70, 229, 0.15);
+            --primary: #4f46e5;
+            --primary-hover: #4338ca;
+            --primary-light: #eef2ff;
+            --success: #10b981;
+            --success-light: #ecfdf5;
+            --danger: #ef4444;
+            --danger-light: #fef2f2;
+            --warning: #f59e0b;
+            --warning-light: #fffbeb;
+            --radius: 16px;
+            --radius-sm: 10px;
+            --transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            --gradient: linear-gradient(135deg, #4f46e5, #8b5cf6);
+        }
+
+        [data-theme="dark"] {
+            --bg-main: #0f172a;
+            --bg-card: #1e293b;
+            --bg-card-hover: #2d3a4f;
+            --bg-input: #334155;
+            --bg-nav: #1e293b;
+            --text-primary: #f1f5f9;
+            --text-secondary: #cbd5e1;
+            --text-muted: #94a3b8;
+            --border: #334155;
+            --shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
+            --shadow-hover: 0 8px 40px rgba(0, 0, 0, 0.6);
+            --primary: #818cf8;
+            --primary-hover: #6366f1;
+            --primary-light: #1e293b;
+            --success: #34d399;
+            --success-light: #1e293b;
+            --danger: #f87171;
+            --danger-light: #1e293b;
+            --warning: #fbbf24;
+            --warning-light: #1e293b;
+            --gradient: linear-gradient(135deg, #818cf8, #a78bfa);
+        }
+
+        body {
+            background-color: var(--bg-main);
+            color: var(--text-primary);
+            padding: 16px;
+            min-height: 100vh;
+            transition: background var(--transition), color var(--transition);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: none;
+            width: 100%;
+        }
+
+        .auth-wrapper {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 80vh;
+            padding: 16px;
+            background: var(--bg-main);
+        }
+
+        .auth-screen {
+            background: var(--bg-card);
+            padding: 2.5rem 2rem;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            width: 100%;
+            max-width: 420px;
+            border: 1px solid var(--border);
+            transition: all var(--transition);
+        }
+
+        .auth-screen .logo {
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .auth-screen .logo h1 {
+            font-size: 2rem;
+            font-weight: 800;
+            background: var(--gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .auth-screen .logo p {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            margin-top: 4px;
+        }
+
+        .auth-toggle {
+            display: flex;
+            background: var(--bg-main);
+            border-radius: var(--radius-sm);
+            margin-bottom: 1.5rem;
+            padding: 4px;
+            border: 1px solid var(--border);
+        }
+
+        .auth-toggle button {
+            flex: 1;
+            padding: 10px;
+            background: transparent;
+            border: none;
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .auth-toggle button.active {
+            background: var(--bg-card);
+            color: var(--primary);
+            box-shadow: var(--shadow);
+        }
+
+        .auth-form {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .auth-form.active {
+            display: block;
+        }
+
+        .navbar {
+            background: var(--bg-nav);
+            padding: 0.8rem 1.2rem;
+            border-radius: var(--radius);
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 1.5rem;
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow);
+            transition: all var(--transition);
+        }
+
+        .nav-brand {
+            font-weight: 800;
+            font-size: 1.3rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .nav-brand i {
+            -webkit-text-fill-color: var(--primary);
+            font-size: 1.4rem;
+        }
+
+        .nav-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .theme-toggle {
+            background: var(--bg-main);
+            border: 1px solid var(--border);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 1.2rem;
+            transition: var(--transition);
+            color: var(--text-secondary);
+        }
+
+        .theme-toggle:hover {
+            background: var(--bg-card-hover);
+            transform: rotate(30deg);
+        }
+
+        .nav-links {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            background: var(--bg-main);
+            padding: 4px;
+            border-radius: var(--radius-sm);
+            width: 100%;
+            justify-content: center;
+            border: 1px solid var(--border);
+        }
+
+        @media (min-width: 768px) {
+            .nav-links {
+                width: auto;
+                justify-content: flex-start;
+                border: none;
+                background: transparent;
+                padding: 0;
+            }
+        }
+
+        .nav-btn {
+            background: transparent;
+            border: none;
+            padding: 0.5rem 1rem;
+            font-weight: 600;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: var(--transition);
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .nav-btn:hover {
+            background: var(--bg-card-hover);
+            color: var(--text-primary);
+        }
+
+        .nav-btn.active {
+            background: var(--bg-card);
+            color: var(--primary);
+            box-shadow: var(--shadow);
+        }
+
+        .nav-btn.logout-btn {
+            color: var(--danger);
+        }
+
+        .nav-btn.logout-btn:hover {
+            background: var(--danger-light);
+        }
+
+        .balance-badge {
+            background: var(--success-light);
+            color: var(--success);
+            padding: 0.4rem 1rem;
+            border-radius: 50px;
+            font-weight: 700;
+            font-size: 0.9rem;
+            border: 1px solid var(--border);
+            transition: all var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .page-view {
+            display: none;
+            width: 100%;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .page-view.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(12px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 16px;
+            width: 100%;
+        }
+
+        .card {
+            background: var(--bg-card);
+            padding: 1.5rem;
+            border-radius: var(--radius);
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow);
+            transition: all var(--transition);
+            width: 100%;
+        }
+
+        .card:hover {
+            box-shadow: var(--shadow-hover);
+            border-color: var(--primary);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .card-header h3 {
+            font-size: 1.1rem;
+            font-weight: 700;
+        }
+
+        .task-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--border);
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+            width: 100%;
+            text-align: left;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 0.4rem;
+            color: var(--text-secondary);
+        }
+
+        .form-group label i {
+            margin-right: 6px;
+        }
+
+        input,
+        select,
+        textarea {
+            width: 100%;
+            padding: 0.8rem 1rem;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border);
+            background: var(--bg-input);
+            color: var(--text-primary);
+            font-size: 0.95rem;
+            outline: none;
+            transition: var(--transition);
+        }
+
+        input:focus,
+        select:focus,
+        textarea:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px var(--primary-light);
+        }
+
+        .btn {
+            padding: 0.8rem 1.5rem;
+            border-radius: var(--radius-sm);
+            font-weight: 600;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: var(--transition);
+            border: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            justify-content: center;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+        }
+
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #059669;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #dc2626;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+        }
+
+        .btn-outline {
+            background: transparent;
+            color: var(--text-secondary);
+            border: 1px solid var(--border);
+        }
+
+        .btn-outline:hover {
+            background: var(--bg-main);
+            transform: translateY(-2px);
+        }
+
+        .btn-sm {
+            padding: 0.4rem 1rem;
+            font-size: 0.8rem;
+        }
+
+        .btn-block {
+            width: 100%;
+            justify-content: center;
+        }
+
+        .table-wrapper {
+            width: 100%;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            background: var(--bg-card);
+        }
+
+        table {
+            width: 100%;
+            min-width: 480px;
+            border-collapse: collapse;
+            text-align: left;
+        }
+
+        th,
+        td {
+            padding: 0.8rem 1rem;
+            border-bottom: 1px solid var(--border);
+            font-size: 0.85rem;
+            white-space: nowrap;
+            color: var(--text-primary);
+        }
+
+        th {
+            background: var(--bg-main);
+            font-weight: 600;
+            color: var(--text-secondary);
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        .badge {
+            padding: 4px 12px;
+            border-radius: 50px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            display: inline-block;
+        }
+
+        .badge.pending {
+            background: var(--warning-light);
+            color: var(--warning);
+        }
+
+        .badge.approved {
+            background: var(--success-light);
+            color: var(--success);
+        }
+
+        .badge.rejected {
+            background: var(--danger-light);
+            color: var(--danger);
+        }
+
+        img.proof-img {
+            width: 56px;
+            height: 56px;
+            object-fit: cover;
+            border-radius: 8px;
+            cursor: pointer;
+            border: 2px solid var(--border);
+            transition: var(--transition);
+        }
+
+        #loadingScreen {
+            display: none;
+            text-align: center;
+            margin-top: 20vh;
+            font-weight: 600;
+            color: var(--primary);
+            font-size: 1.2rem;
+        }
+
+        #loadingScreen .spinner {
+            width: 48px;
+            height: 48px;
+            border: 4px solid var(--border);
+            border-top: 4px solid var(--primary);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto 16px;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .daily-limit-bar {
+            background: var(--bg-card);
+            padding: 12px 20px;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border);
+            text-align: center;
+            font-weight: 500;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .daily-limit-bar .progress-bar {
+            flex: 1;
+            min-width: 100px;
+            height: 6px;
+            background: var(--bg-main);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .daily-limit-bar .progress-bar .fill {
+            height: 100%;
+            background: var(--gradient);
+            border-radius: 10px;
+            transition: width 0.5s ease;
+        }
+
+        .profile-header {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 1.5rem 0;
+            text-align: center;
+        }
+
+        .profile-avatar {
+            position: relative;
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            overflow: hidden;
+            border: 4px solid var(--primary);
+            box-shadow: var(--shadow);
+            margin-bottom: 1rem;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .profile-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .profile-avatar .avatar-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0, 0, 0, 0.6);
+            color: white;
+            font-size: 0.7rem;
+            padding: 4px;
+            text-align: center;
+            opacity: 0;
+            transition: var(--transition);
+        }
+
+        .profile-avatar:hover .avatar-overlay {
+            opacity: 1;
+        }
+
+        .profile-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            width: 100%;
+            max-width: 400px;
+            margin: 1rem auto;
+        }
+
+        .profile-stats .stat-item {
+            background: var(--bg-main);
+            padding: 12px;
+            border-radius: var(--radius-sm);
+            text-align: center;
+            border: 1px solid var(--border);
+        }
+
+        .profile-stats .stat-item .stat-value {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .profile-stats .stat-item .stat-label {
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .verification-list {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        @media (max-width: 480px) {
+            .verification-list {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .verification-item {
+            background: var(--bg-main);
+            padding: 12px 16px;
+            border-radius: var(--radius-sm);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 1px solid var(--border);
+        }
+
+        .verification-item .info {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .verification-item .info .label {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
+
+        .verification-item .info .value {
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .deposit-card {
+            background: var(--bg-card);
+            border-radius: var(--radius);
+            border: 1px solid var(--border);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: var(--shadow);
+        }
+
+        .deposit-card .deposit-balance {
+            font-size: 2rem;
+            font-weight: 800;
+            color: var(--primary);
+        }
+
+        .chart-container {
+            background: var(--bg-card);
+            border-radius: var(--radius);
+            border: 1px solid var(--border);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: var(--shadow);
+        }
+
+        .chart-container canvas {
+            max-height: 200px;
+        }
+
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 12px 24px;
+            border-radius: var(--radius-sm);
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow-hover);
+            z-index: 9999;
+            display: none;
+            animation: slideIn 0.3s ease;
+            max-width: 350px;
+            font-weight: 500;
+        }
+
+        .toast.success {
+            border-left: 4px solid var(--success);
+        }
+
+        .toast.error {
+            border-left: 4px solid var(--danger);
+        }
+
+        .toast.info {
+            border-left: 4px solid var(--primary);
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .auth-screen {
+                padding: 1.5rem 1rem;
+            }
+            .navbar {
+                padding: 0.6rem 1rem;
+            }
+            .card {
+                padding: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="toast" class="toast"></div>
+
+    <div id="loadingScreen">
+        <div class="spinner"></div>
+        Memproses Data...
+    </div>
+
+    <!-- LOGIN -->
+    <div id="loginWrapper" class="auth-wrapper">
+        <div class="auth-screen">
+            <div class="logo">
+                <h1><i class="fas fa-bolt"></i> Cuanki</h1>
+                <p>Hub Kerja Mikro Modern</p>
+            </div>
+
+            <div class="auth-toggle">
+                <button id="btnTabLogin" class="active" onclick="switchAuthTab('login')"><i class="fas fa-sign-in-alt"></i> Sign In</button>
+                <button id="btnTabSignup" onclick="switchAuthTab('signup')"><i class="fas fa-user-plus"></i> Sign Up</button>
+            </div>
+
+            <form id="formLogin" class="auth-form active" onsubmit="handleLogin(event)">
+                <div class="form-group">
+                    <label><i class="fas fa-user"></i> Username</label>
+                    <input type="text" id="loginUsername" placeholder="Masukkan username" required>
+                </div>
+                <div class="form-group">
+                    <label><i class="fas fa-lock"></i> Password</label>
+                    <input type="password" id="loginPassword" placeholder="Password" required>
+                </div>
+                <button type="submit" class="btn btn-primary btn-block">Masuk Sekarang</button>
+            </form>
+
+            <form id="formSignup" class="auth-form" onsubmit="handleSignup(event)">
+                <div class="form-group">
+                    <label><i class="fas fa-envelope"></i> Email</label>
+                    <input type="email" id="signupEmail" placeholder="contoh@email.com" required>
+                </div>
+                <div class="form-group">
+                    <label><i class="fas fa-user"></i> Username</label>
+                    <input type="text" id="signupUsername" placeholder="Pilih username" required>
+                </div>
+                <div class="form-group">
+                    <label><i class="fas fa-lock"></i> Password</label>
+                    <input type="password" id="signupPassword" placeholder="Minimal 6 karakter" minlength="6" required>
+                </div>
+                <button type="submit" class="btn btn-success btn-block">Daftar Akun</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- USER APP -->
+    <div id="userApp" class="container">
+        <div class="navbar">
+            <div class="nav-brand"><i class="fas fa-bolt"></i> Cuanki</div>
+            <div class="nav-actions">
+                <div class="balance-badge"><i class="fas fa-wallet"></i> <span id="userBalanceDisplay">Rp 0</span></div>
+                <button class="theme-toggle" onclick="toggleTheme()">🌙</button>
+            </div>
+            <div class="nav-links">
+                <button class="nav-btn active" onclick="switchTab('user', 'tasks')"><i class="fas fa-tasks"></i> Misi</button>
+                <button class="nav-btn" onclick="switchTab('user', 'profile')"><i class="fas fa-user-circle"></i> Profil</button>
+                <button class="nav-btn" onclick="switchTab('user', 'withdraw')"><i class="fas fa-hand-holding-usd"></i> Tarik</button>
+                <button class="nav-btn logout-btn" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Keluar</button>
+            </div>
+        </div>
+
+        <div id="u-tasks" class="page-view active">
+            <div class="daily-limit-bar">
+                <i class="fas fa-clock"></i> Batas Pengerjaan Hari Ini:
+                <span id="dailyLimitDisplay">0 / 15</span>
+                <div class="progress-bar">
+                    <div class="fill" id="dailyProgressFill" style="width:0%"></div>
+                </div>
+            </div>
+            <div id="taskGrid" class="card-grid"></div>
+
+            <div id="taskExecution" class="card" style="display:none; max-width:500px; margin:20px auto;">
+                <h3 id="execTaskName" style="color:var(--primary); margin-bottom:12px;"></h3>
+                <div style="background:var(--bg-main); padding:1rem; border-radius:var(--radius-sm); margin-bottom:1rem; border:1px solid var(--border);">
+                    <a id="execTaskLink" href="#" target="_blank" class="btn btn-primary btn-block" style="text-decoration:none;">
+                        <i class="fas fa-external-link-alt"></i> Buka Tautan
+                    </a>
+                </div>
+                <div class="form-group">
+                    <label><i class="fas fa-image"></i> Unggah Bukti</label>
+                    <input type="file" id="proofImage" accept="image/*">
+                </div>
+                <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                    <button class="btn btn-outline" style="flex:1;" onclick="cancelTask()">Batal</button>
+                    <button class="btn btn-primary" style="flex:2;" onclick="submitTask()"><i class="fas fa-paper-plane"></i> Kirim</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="u-profile" class="page-view">
+            <div class="card">
+                <div class="profile-header">
+                    <div class="profile-avatar" onclick="document.getElementById('avatarInput').click()">
+                        <img id="profileAvatar" src="https://ui-avatars.com/api/?name=User&background=4f46e5&color=fff&size=120" alt="Avatar">
+                        <div class="avatar-overlay"><i class="fas fa-camera"></i> Ganti</div>
+                    </div>
+                    <input type="file" id="avatarInput" accept="image/*" style="display:none" onchange="uploadAvatar(event)">
+                    <div class="profile-name" id="profileDisplayName">User</div>
+                    <div class="profile-username">@<span id="profileUsername">username</span></div>
+                    <div style="margin-top:8px;">
+                        <span class="badge" id="profileVerifiedBadge">Belum Verifikasi</span>
+                    </div>
+                </div>
+
+                <div class="profile-stats">
+                    <div class="stat-item">
+                        <div class="stat-value" id="statTasks">0</div>
+                        <div class="stat-label">Misi Selesai</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="statEarned">Rp 0</div>
+                        <div class="stat-label">Total Pendapatan</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="statPending">0</div>
+                        <div class="stat-label">Pending</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="chart-container">
+                <h4 style="margin-bottom:12px;"><i class="fas fa-chart-bar"></i> Statistik Mingguan</h4>
+                <canvas id="weeklyChart"></canvas>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h3><i class="fas fa-shield-alt"></i> Verifikasi Akun</h3>
+                </div>
+                <div class="verification-list">
+                    <div class="verification-item">
+                        <div class="info">
+                            <span class="label"><i class="fas fa-envelope"></i> Email</span>
+                            <span class="value" id="verifyEmailDisplay">-</span>
+                        </div>
+                        <button class="btn btn-sm btn-primary" onclick="verifyEmail()">Verifikasi</button>
+                    </div>
+                    <div class="verification-item">
+                        <div class="info">
+                            <span class="label"><i class="fas fa-phone"></i> Nomor HP</span>
+                            <span class="value" id="verifyPhoneDisplay">-</span>
+                        </div>
+                        <button class="btn btn-sm btn-primary" onclick="verifyPhone()">Verifikasi</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h3><i class="fas fa-key"></i> Ganti Password</h3>
+                </div>
+                <form onsubmit="changePassword(event)" style="max-width:400px;">
+                    <div class="form-group">
+                        <label>Password Lama</label>
+                        <input type="password" id="oldPassword" placeholder="Password lama" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Password Baru</label>
+                        <input type="password" id="newPassword" placeholder="Minimal 6 karakter" minlength="6" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Update Password</button>
+                </form>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h3><i class="fas fa-history"></i> Riwayat Misi</h3>
+                </div>
+                <div class="table-wrapper">
+                    <table id="userHistoryTable">
+                        <tr><th>Misi</th><th>Imbalan</th><th>Status</th><th>Tanggal</th></tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div id="u-withdraw" class="page-view">
+            <div class="card" style="max-width:500px; margin:auto;">
+                <h3 style="margin-bottom:1rem;"><i class="fas fa-hand-holding-usd"></i> Tarik Dana</h3>
+                <div class="form-group">
+                    <label><i class="fas fa-university"></i> Pilih Metode</label>
+                    <select id="wdMethod">
+                        <option value="DANA">DANA</option>
+                        <option value="GoPay">GoPay</option>
+                        <option value="OVO">OVO</option>
+                        <option value="BCA">BCA</option>
+                        <option value="BRI">BRI</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label><i class="fas fa-hashtag"></i> Nomor Tujuan</label>
+                    <input type="number" id="wdAccount" placeholder="No Rekening / E-Wallet" required>
+                </div>
+                <div class="form-group">
+                    <label><i class="fas fa-user"></i> Nama Penerima</label>
+                    <input type="text" id="wdName" placeholder="Nama Sesuai Rekening" required>
+                </div>
+                <div class="form-group">
+                    <label><i class="fas fa-money-bill-wave"></i> Jumlah (Rp)</label>
+                    <input type="number" id="wdAmount" placeholder="Min Rp 5.000" required>
+                </div>
+                <button class="btn btn-primary btn-block" onclick="requestWithdraw()"><i class="fas fa-paper-plane"></i> Kirim Permintaan</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ADMIN APP -->
+    <div id="adminApp" class="container">
+        <div class="navbar">
+            <div class="nav-brand"><i class="fas fa-bolt"></i> Cuanki <span style="font-size:0.8rem;background:var(--danger);color:white;padding:2px 10px;border-radius:50px;margin-left:8px;">ADMIN</span></div>
+            <div class="nav-actions">
+                <span style="color:var(--text-secondary);font-weight:500;" id="adminNameDisplay"></span>
+                <button class="theme-toggle" onclick="toggleTheme()">🌙</button>
+            </div>
+            <div class="nav-links">
+                <button class="nav-btn active" onclick="switchTab('admin', 'dashboard')"><i class="fas fa-chart-pie"></i> Dashboard</button>
+                <button class="nav-btn" onclick="switchTab('admin', 'review-tasks')"><i class="fas fa-check-double"></i> Review</button>
+                <button class="nav-btn" onclick="switchTab('admin', 'manage-tasks')"><i class="fas fa-tasks"></i> Kelola</button>
+                <button class="nav-btn" onclick="switchTab('admin', 'review-wd')"><i class="fas fa-hand-holding-usd"></i> Pencairan</button>
+                <button class="nav-btn logout-btn" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Keluar</button>
+            </div>
+        </div>
+
+        <div id="a-dashboard" class="page-view active">
+            <div class="deposit-card">
+                <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">
+                    <div>
+                        <span style="color:var(--text-secondary);font-size:0.85rem;">Saldo Admin</span>
+                        <div class="deposit-balance" id="adminBalanceDisplay">Rp 0</div>
+                    </div>
+                    <button class="btn btn-primary" onclick="adminDeposit()"><i class="fas fa-plus-circle"></i> Deposit</button>
+                </div>
+            </div>
+
+            <div class="card-grid" style="margin-bottom:1.5rem;">
+                <div class="card" style="text-align:center;">
+                    <div style="font-size:2rem;color:var(--primary);"><i class="fas fa-users"></i></div>
+                    <div style="font-size:1.5rem;font-weight:700;" id="adminStatUsers">0</div>
+                    <div style="color:var(--text-secondary);font-size:0.85rem;">Total User</div>
+                </div>
+                <div class="card" style="text-align:center;">
+                    <div style="font-size:2rem;color:var(--success);"><i class="fas fa-check-circle"></i></div>
+                    <div style="font-size:1.5rem;font-weight:700;" id="adminStatCompleted">0</div>
+                    <div style="color:var(--text-secondary);font-size:0.85rem;">Misi Selesai</div>
+                </div>
+                <div class="card" style="text-align:center;">
+                    <div style="font-size:2rem;color:var(--warning);"><i class="fas fa-clock"></i></div>
+                    <div style="font-size:1.5rem;font-weight:700;" id="adminStatPending">0</div>
+                    <div style="color:var(--text-secondary);font-size:0.85rem;">Pending Review</div>
+                </div>
+                <div class="card" style="text-align:center;">
+                    <div style="font-size:2rem;color:var(--danger);"><i class="fas fa-hand-holding-usd"></i></div>
+                    <div style="font-size:1.5rem;font-weight:700;" id="adminStatWdPending">0</div>
+                    <div style="color:var(--text-secondary);font-size:0.85rem;">Penarikan Tertunda</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h3><i class="fas fa-list"></i> Riwayat Transaksi</h3>
+                </div>
+                <div class="table-wrapper">
+                    <table id="adminTransactionTable">
+                        <tr><th>Waktu</th><th>User</th><th>Jenis</th><th>Jumlah</th><th>Status</th></tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div id="a-review-tasks" class="page-view card">
+            <h3 style="margin-bottom:1rem;"><i class="fas fa-check-double"></i> Review Bukti Misi</h3>
+            <div class="table-wrapper">
+                <table id="adminTasksTable">
+                    <tr><th>User</th><th>Tugas</th><th>Bukti</th><th>Aksi</th></tr>
+                </table>
+            </div>
+        </div>
+
+        <div id="a-manage-tasks" class="page-view">
+            <div class="card" style="margin-bottom:20px;">
+                <h3 style="margin-bottom:1rem;"><i class="fas fa-plus-circle"></i> Buat Tugas Baru</h3>
+                <div style="display:flex;flex-wrap:wrap;gap:12px;">
+                    <div class="form-group" style="flex:1;min-width:140px;">
+                        <input type="text" id="newTaskName" placeholder="Nama Tugas">
+                    </div>
+                    <div class="form-group" style="flex:1;min-width:120px;">
+                        <input type="number" id="newTaskReward" placeholder="Bayaran (Rp)">
+                    </div>
+                    <div class="form-group" style="flex:1;min-width:120px;">
+                        <input type="number" id="newTaskQuota" placeholder="Kuota">
+                    </div>
+                    <div class="form-group" style="flex:2;min-width:180px;">
+                        <input type="text" id="newTaskLink" placeholder="Link URL">
+                    </div>
+                    <button class="btn btn-primary" style="flex:0 0 auto;padding:0 24px;" onclick="adminCreateTask()"><i class="fas fa-plus"></i> Tambah</button>
+                </div>
+            </div>
+            <div class="card">
+                <h3 style="margin-bottom:1rem;"><i class="fas fa-list"></i> Daftar Tugas Aktif</h3>
+                <div class="table-wrapper">
+                    <table id="adminManageTasksTable">
+                        <tr><th>Tugas</th><th>Bayaran</th><th>Kuota</th><th>Aksi</th></tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div id="a-review-wd" class="page-view card">
+            <h3 style="margin-bottom:1rem;"><i class="fas fa-hand-holding-usd"></i> Antrean Pencairan</h3>
+            <div class="table-wrapper">
+                <table id="adminWdTable">
+                    <tr><th>User</th><th>Data Tujuan</th><th>Nominal</th><th>Aksi</th></tr>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ===== SUPABASE =====
+        var supabaseUrl = 'https://nrouhvvkokowoezuavdp.supabase.co';
+        var supabaseAnonKey =
+            'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5yb3VodnZrb2tvd29lenVhdmRwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM4NjQ5NjksImV4cCI6MjA5OTQ0MDk2OX0.liKZ94nlGNfqQx0UhlkQajy2QIHFquGKzeabhH3zVao';
+        var supabase = window.supabase.createClient(supabaseUrl, supabaseAnonKey);
+
+        // ===== STATE =====
+        var currentUser = null;
+        var activeTask = null;
+        var MAX_DAILY_TASKS = 15;
+        var weeklyChart = null;
+
+        // ===== THEME =====
+        function toggleTheme() {
+            var html = document.documentElement;
+            var current = html.getAttribute('data-theme');
+            var next = (current === 'dark') ? 'light' : 'dark';
+            html.setAttribute('data-theme', next);
+            var btns = document.querySelectorAll('.theme-toggle');
+            for (var i = 0; i < btns.length; i++) {
+                btns[i].textContent = (next === 'dark') ? '☀️' : '🌙';
+            }
+            localStorage.setItem('theme', next);
+        }
+
+        (function() {
+            var saved = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', saved);
+            var btns = document.querySelectorAll('.theme-toggle');
+            for (var i = 0; i < btns.length; i++) {
+                btns[i].textContent = (saved === 'dark') ? '☀️' : '🌙';
+            }
+        })();
+
+        // ===== TOAST =====
+        function showToast(message, type) {
+            type = type || 'info';
+            var toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = 'toast ' + type;
+            toast.style.display = 'block';
+            setTimeout(function() {
+                toast.style.display = 'none';
+            }, 3000);
+        }
+
+        // ===== HELPERS =====
+        function formatRp(angka) {
+            if (angka === undefined || angka === null) angka = 0;
+            return 'Rp ' + angka.toLocaleString('id-ID');
+        }
+
+        function getTodayDate() {
+            return new Date().toISOString().split('T')[0];
+        }
+
+        function getWeekDates() {
+            var dates = [];
+            for (var i = 6; i >= 0; i--) {
+                var d = new Date();
+                d.setDate(d.getDate() - i);
+                dates.push(d.toISOString().split('T')[0]);
+            }
+            return dates;
+        }
+
+        function switchAuthTab(type) {
+            var btnLogin = document.getElementById('btnTabLogin');
+            var btnSignup = document.getElementById('btnTabSignup');
+            var formLogin = document.getElementById('formLogin');
+            var formSignup = document.getElementById('formSignup');
+
+            if (type === 'login') {
+                btnLogin.classList.add('active');
+                btnSignup.classList.remove('active');
+                formLogin.classList.add('active');
+                formSignup.classList.remove('active');
+            } else {
+                btnSignup.classList.add('active');
+                btnLogin.classList.remove('active');
+                formSignup.classList.add('active');
+                formLogin.classList.remove('active');
+            }
+        }
+
+        // ===== AUTH =====
+        async function handleSignup(e) {
+            e.preventDefault();
+            var email = document.getElementById('signupEmail').value.trim();
+            var username = document.getElementById('signupUsername').value.trim();
+            var password = document.getElementById('signupPassword').value.trim();
+            var today = getTodayDate();
+
+            var btn = document.getElementById('btnTabSignup');
+            btn.innerText = 'Memproses...';
+            btn.disabled = true;
+
+            var result = await supabase
+                .from('users')
+                .select('*')
+                .or('email.eq.' + email + ',username.eq.' + username);
+
+            if (result.data && result.data.length > 0) {
+                showToast('Email atau Username sudah digunakan!', 'error');
+                btn.innerText = 'Sign Up';
+                btn.disabled = false;
+                return;
+            }
+
+            var insertResult = await supabase.from('users').insert([{
+                email: email,
+                username: username,
+                password: password,
+                role: 'user',
+                daily_task_count: 0,
+                last_task_date: today,
+                balance: 0,
+                avatar: null,
+                email_verified: false,
+                phone_verified: false,
+                phone: null
+            }]);
+
+            btn.innerText = 'Sign Up';
+            btn.disabled = false;
+
+            if (insertResult.error) {
+                showToast('Terjadi kesalahan server.', 'error');
+                console.error(insertResult.error);
+            } else {
+                showToast('Akun berhasil dibuat! Silakan Sign In.', 'success');
+                document.getElementById('formSignup').reset();
+                switchAuthTab('login');
+            }
+        }
+
+        async function handleLogin(e) {
+            e.preventDefault();
+            var username = document.getElementById('loginUsername').value.trim();
+            var password = document.getElementById('loginPassword').value.trim();
+
+            document.getElementById('loginWrapper').style.display = 'none';
+            document.getElementById('loadingScreen').style.display = 'block';
+
+            var result = await supabase
+                .from('users')
+                .select('*')
+                .eq('username', username)
+                .eq('password', password)
+                .single();
+
+            var user = result.data;
+
+            if (!user) {
+                showToast('Username atau Password salah!', 'error');
+                document.getElementById('loginWrapper').style.display = 'flex';
+                document.getElementById('loadingScreen').style.display = 'none';
+                return;
+            }
+
+            var today = getTodayDate();
+            if (user.role === 'user' && user.last_task_date !== today) {
+                await supabase
+                    .from('users')
+                    .update({ daily_task_count: 0, last_task_date: today })
+                    .eq('id', user.id);
+                user.daily_task_count = 0;
+            }
+
+            currentUser = user;
+            document.getElementById('loadingScreen').style.display = 'none';
+
+            if (user.role === 'admin') {
+                document.getElementById('adminApp').style.display = 'block';
+                document.getElementById('adminNameDisplay').innerText = user.username;
+                loadAdminDashboard();
+                loadAdminData();
+            } else {
+                document.getElementById('userApp').style.display = 'block';
+                document.getElementById('userNameDisplay').innerText = user.username;
+                loadUserTasks();
+                refreshUserData();
+                loadUserProfile();
+            }
+        }
+
+        function logout() {
+            currentUser = null;
+            location.reload();
+        }
+
+        function switchTab(role, tab) {
+            var prefix = (role === 'admin') ? 'a' : 'u';
+            var app = document.getElementById(role + 'App');
+            var views = app.querySelectorAll('.page-view');
+            var btns = app.querySelectorAll('.nav-btn');
+
+            for (var i = 0; i < views.length; i++) {
+                views[i].classList.remove('active');
+            }
+            for (var i = 0; i < btns.length; i++) {
+                btns[i].classList.remove('active');
+            }
+
+            document.getElementById(prefix + '-' + tab).classList.add('active');
+
+            var map = {
+                'tasks': 0,
+                'profile': 1,
+                'withdraw': 2,
+                'dashboard': 0,
+                'review-tasks': 1,
+                'manage-tasks': 2,
+                'review-wd': 3
+            };
+            var idx = map[tab];
+            if (idx !== undefined && btns[idx]) btns[idx].classList.add('active');
+
+            if (role === 'admin') {
+                loadAdminDashboard();
+                loadAdminData();
+            }
+            if (role === 'user' && tab === 'tasks') loadUserTasks();
+            if (role === 'user' && tab === 'profile') loadUserProfile();
+        }
+
+        // ===== USER =====
+        async function loadUserTasks() {
+            var result = await supabase
+                .from('users')
+                .select('daily_task_count, balance')
+                .eq('id', currentUser.id)
+                .single();
+
+            var user = result.data;
+            if (user) {
+                currentUser.daily_task_count = user.daily_task_count;
+                currentUser.balance = user.balance;
+                document.getElementById('dailyLimitDisplay').innerText = user.daily_task_count + ' / ' + MAX_DAILY_TASKS;
+                var pct = Math.min((user.daily_task_count / MAX_DAILY_TASKS) * 100, 100);
+                document.getElementById('dailyProgressFill').style.width = pct + '%';
+                document.getElementById('userBalanceDisplay').innerText = formatRp(user.balance);
+            }
+
+            var tasksResult = await supabase
+                .from('tasks_list')
+                .select('*')
+                .order('id', { ascending: false });
+
+            var tasks = tasksResult.data;
+            var html = '';
+
+            if (tasks && tasks.length > 0) {
+                for (var i = 0; i < tasks.length; i++) {
+                    var t = tasks[i];
+                    var isFull = t.quota <= 0;
+                    var isLimitReached = currentUser.daily_task_count >= MAX_DAILY_TASKS;
+                    var btnHtml = '';
+
+                    if (isLimitReached) {
+                        btnHtml = '<button class="btn btn-sm btn-outline" disabled>Batas Harian</button>';
+                    } else if (isFull) {
+                        btnHtml = '<button class="btn btn-sm btn-outline" disabled>Kuota Habis</button>';
+                    } else {
+                        btnHtml = '<button class="btn btn-sm btn-primary" onclick="prepareTask(\'' + t.id + '\', \'' + t
+                            .name + '\', ' + t.reward + ', \'' + t.link + '\')">Kerjakan</button>';
+                    }
+
+                    html += '<div class="card">';
+                    html += '<h3 style="font-size:1.05rem; margin-bottom:4px;">' + t.name + '</h3>';
+                    html += '<p style="font-size:0.85rem; color:var(--text-secondary); margin-bottom:10px;">';
+                    html += '<i class="fas fa-box"></i> Tersisa: <strong>' + t.quota + ' kuota</strong>';
+                    html += '</p>';
+                    html += '<div class="task-footer">';
+                    html += '<strong style="color:var(--success); font-size:1rem;"><i class="fas fa-coins"></i> ' +
+                        formatRp(t.reward) + '</strong>';
+                    html += btnHtml;
+                    html += '</div></div>';
+                }
+            } else {
+                html =
+                    '<div class="card" style="text-align:center;color:var(--text-muted);padding:2rem;"><i class="fas fa-inbox" style="font-size:2rem;display:block;margin-bottom:8px;"></i> Belum ada tugas tersedia.</div>';
+            }
+            document.getElementById('taskGrid').innerHTML = html;
+        }
+
+        function prepareTask(id, name, reward, link) {
+            activeTask = { id: id, name: name, reward: reward };
+            document.getElementById('taskGrid').style.display = 'none';
+            document.getElementById('taskExecution').style.display = 'block';
+            document.getElementById('execTaskName').innerHTML = '<i class="fas fa-tasks"></i> ' + name +
+                ' <span style="color:var(--success);font-size:0.9rem;">(' + formatRp(reward) + ')</span>';
+            document.getElementById('execTaskLink').href = link;
+            document.getElementById('execTaskLink').target = '_blank';
+        }
+
+        function cancelTask() {
+            activeTask = null;
+            document.getElementById('taskExecution').style.display = 'none';
+            document.getElementById('taskGrid').style.display = 'grid';
+            document.getElementById('proofImage').value = '';
+        }
+
+        async function submitTask() {
+            if (currentUser.daily_task_count >= MAX_DAILY_TASKS) {
+                showToast('Batas harian sudah tercapai!', 'error');
+                return;
+            }
+            var fileInput = document.getElementById('proofImage');
+            if (fileInput.files.length === 0) {
+                showToast('Pilih screenshot bukti tugas!', 'error');
+                return;
+            }
+
+            var btn = event.target;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Mengunggah...';
+            btn.disabled = true;
+
+            var reader = new FileReader();
+            reader.readAsDataURL(fileInput.files[0]);
+            var self = this;
+
+            reader.onload = async function() {
+                var quotaResult = await supabase
+                    .from('tasks_list')
+                    .select('quota')
+                    .eq('id', activeTask.id)
+                    .single();
+
+                var taskData = quotaResult.data;
+                if (taskData && taskData.quota > 0) {
+                    await supabase
+                        .from('tasks_list')
+                        .update({ quota: taskData.quota - 1 })
+                        .eq('id', activeTask.id);
+                }
+
+                currentUser.daily_task_count += 1;
+                await supabase
+                    .from('users')
+                    .update({ daily_task_count: currentUser.daily_task_count })
+                    .eq('id', currentUser.id);
+
+                var insertResult = await supabase.from('tasks_history').insert([{
+                    username: currentUser.username,
+                    task_name: activeTask.name,
+                    reward: activeTask.reward,
+                    proof_image: reader.result,
+                    status: 'pending',
+                    created_at: new Date().toISOString()
+                }]);
+
+                if (insertResult.error) {
+                    showToast('Gagal mengirim tugas!', 'error');
+                    console.error(insertResult.error);
+                } else {
+                    showToast('Tugas berhasil dikirim ke Admin!', 'success');
+                }
+
+                btn.innerHTML = '<i class="fas fa-paper-plane"></i> Kirim Bukti';
+                btn.disabled = false;
+                cancelTask();
+                loadUserTasks();
+                refreshUserData();
+            };
+        }
+
+        async function loadUserProfile() {
+            var result = await supabase
+                .from('users')
+                .select('*')
+                .eq('id', currentUser.id)
+                .single();
+
+            var user = result.data;
+            if (!user) return;
+
+            document.getElementById('profileDisplayName').innerText = user.username;
+            document.getElementById('profileUsername').innerText = user.username;
+            if (user.avatar) {
+                document.getElementById('profileAvatar').src = user.avatar;
+            }
+
+            var verified = user.email_verified && user.phone_verified;
+            var badge = document.getElementById('profileVerifiedBadge');
+            badge.innerHTML = verified ? 'Terverifikasi' : 'Belum Verifikasi';
+            badge.className = 'badge ' + (verified ? 'approved' : 'pending');
+
+            document.getElementById('verifyEmailDisplay').innerText = user.email || '-';
+            document.getElementById('verifyPhoneDisplay').innerText = user.phone || '-';
+
+            var emailBtn = document.querySelector('.verification-item:first-child .btn');
+            var phoneBtn = document.querySelector('.verification-item:last-child .btn');
+
+            if (user.email_verified) {
+                emailBtn.innerHTML = '<i class="fas fa-check"></i> Terverifikasi';
+                emailBtn.disabled = true;
+                emailBtn.className = 'btn btn-sm btn-success';
+            } else {
+                emailBtn.innerHTML = 'Verifikasi';
+                emailBtn.disabled = false;
+                emailBtn.className = 'btn btn-sm btn-primary';
+            }
+
+            if (user.phone_verified) {
+                phoneBtn.innerHTML = '<i class="fas fa-check"></i> Terverifikasi';
+                phoneBtn.disabled = true;
+                phoneBtn.className = 'btn btn-sm btn-success';
+            } else {
+                phoneBtn.innerHTML = 'Verifikasi';
+                phoneBtn.disabled = false;
+                phoneBtn.className = 'btn btn-sm btn-primary';
+            }
+
+            var historyResult = await supabase
+                .from('tasks_history')
+                .select('*')
+                .eq('username', currentUser.username);
+
+            var history = historyResult.data || [];
+            var completed = [];
+            var pending = [];
+            var totalEarned = 0;
+
+            for (var i = 0; i < history.length; i++) {
+                if (history[i].status === 'approved') {
+                    completed.push(history[i]);
+                    totalEarned += history[i].reward;
+                } else if (history[i].status === 'pending') {
+                    pending.push(history[i]);
+                }
+            }
+
+            document.getElementById('statTasks').innerText = completed.length;
+            document.getElementById('statEarned').innerText = formatRp(totalEarned);
+            document.getElementById('statPending').innerText = pending.length;
+
+            var weekDates = getWeekDates();
+            var weekData = [];
+
+            for (var i = 0; i < weekDates.length; i++) {
+                var date = weekDates[i];
+                var dayTotal = 0;
+                for (var j = 0; j < history.length; j++) {
+                    if (history[j].created_at && history[j].created_at.startsWith(date) && history[j].status ===
+                        'approved') {
+                        dayTotal += history[j].reward;
+                    }
+                }
+                weekData.push(dayTotal);
+            }
+
+            if (weeklyChart) weeklyChart.destroy();
+            var ctx = document.getElementById('weeklyChart').getContext('2d');
+            weeklyChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'],
+                    datasets: [{
+                        label: 'Pendapatan (Rp)',
+                        data: weekData,
+                        backgroundColor: 'rgba(79, 70, 229, 0.6)',
+                        borderColor: '#4f46e5',
+                        borderWidth: 2,
+                        borderRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) { return 'Rp' + value.toLocaleString(); }
+                            }
+                        }
+                    }
+                }
+            });
+
+            var html = '<tr><th>Misi</th><th>Imbalan</th><th>Status</th><th>Tanggal</th></tr>';
+            if (history && history.length > 0) {
+                var maxShow = Math.min(history.length, 20);
+                for (var i = 0; i < maxShow; i++) {
+                    var h = history[i];
+                    var b = (h.status === 'pending') ? 'badge pending' : (h.status === 'approved' ? 'badge approved' :
+                        'badge rejected');
+                    var date = h.created_at ? new Date(h.created_at).toLocaleDateString('id-ID') : '-';
+                    html += '<tr><td>' + h.task_name + '</td><td style="color:var(--success);font-weight:600;">' +
+                        formatRp(h.reward) + '</td><td><span class="' + b + '">' + h.status +
+                        '</span></td><td>' + date + '</td></tr>';
+                }
+            } else {
+                html +=
+                    '<tr><td colspan="4" style="text-align:center;color:var(--text-muted);">Belum ada riwayat</td></tr>';
+            }
+            document.getElementById('userHistoryTable').innerHTML = html;
+        }
+
+        async function uploadAvatar(event) {
+            var file = event.target.files[0];
+            if (!file) return;
+
+            var reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = async function() {
+                await supabase
+                    .from('users')
+                    .update({ avatar: reader.result })
+                    .eq('id', currentUser.id);
+                document.getElementById('profileAvatar').src = reader.result;
+                showToast('Avatar berhasil diupdate!', 'success');
+            };
+        }
+
+        async function verifyEmail() {
+            var email = prompt('Masukkan email Anda untuk verifikasi:');
+            if (!email) return;
+
+            await supabase
+                .from('users')
+                .update({ email: email, email_verified: true })
+                .eq('id', currentUser.id);
+
+            showToast('Email berhasil diverifikasi!', 'success');
+            loadUserProfile();
+            refreshUserData();
+        }
+
+        async function verifyPhone() {
+            var phone = prompt('Masukkan nomor HP Anda:');
+            if (!phone) return;
+
+            await supabase
+                .from('users')
+                .update({ phone: phone, phone_verified: true })
+                .eq('id', currentUser.id);
+
+            showToast('Nomor HP berhasil diverifikasi!', 'success');
+            loadUserProfile();
+            refreshUserData();
+        }
+
+        async function changePassword(e) {
+            e.preventDefault();
+            var oldPass = document.getElementById('oldPassword').value;
+            var newPass = document.getElementById('newPassword').value;
+
+            if (oldPass !== currentUser.password) {
+                showToast('Password lama salah!', 'error');
+                return;
+            }
+            if (newPass.length < 6) {
+                showToast('Password baru minimal 6 karakter!', 'error');
+                return;
+            }
+
+            await supabase
+                .from('users')
+                .update({ password: newPass })
+                .eq('id', currentUser.id);
+
+            showToast('Password berhasil diubah!', 'success');
+            document.getElementById('oldPassword').value = '';
+            document.getElementById('newPassword').value = '';
+            currentUser.password = newPass;
+        }
+
+        async function refreshUserData() {
+            var result = await supabase
+                .from('users')
+                .select('balance, daily_task_count')
+                .eq('id', currentUser.id)
+                .single();
+
+            var data = result.data;
+            if (data) {
+                document.getElementById('userBalanceDisplay').innerText = formatRp(data.balance);
+                currentUser.balance = data.balance;
+                currentUser.daily_task_count = data.daily_task_count;
+            }
+        }
+
+        async function requestWithdraw() {
+            var m = document.getElementById('wdMethod').value;
+            var a = document.getElementById('wdAccount').value;
+            var n = document.getElementById('wdName').value;
+            var am = parseInt(document.getElementById('wdAmount').value);
+
+            if (!a || !n || !am) {
+                showToast('Isi semua data!', 'error');
+                return;
+            }
+            if (am < 5000) {
+                showToast('Minimal Rp 5.000', 'error');
+                return;
+            }
+            if (am > currentUser.balance) {
+                showToast('Saldo tidak mencukupi!', 'error');
+                return;
+            }
+
+            var adminResult = await supabase
+                .from('users')
+                .select('balance')
+                .eq('role', 'admin')
+                .single();
+
+            var admin = adminResult.data;
+            if (!admin || admin.balance < am) {
+                showToast('Dana admin tidak mencukupi!', 'error');
+                return;
+            }
+
+            var newBalance = currentUser.balance - am;
+            await supabase
+                .from('users')
+                .update({ balance: newBalance })
+                .eq('id', currentUser.id);
+
+            await supabase
+                .from('users')
+                .update({ balance: admin.balance - am })
+                .eq('role', 'admin');
+
+            await supabase.from('withdrawals').insert([{
+                username: currentUser.username,
+                method: m,
+                account_no: a,
+                account_name: n,
+                amount: am,
+                status: 'pending',
+                created_at: new Date().toISOString()
+            }]);
+
+            showToast('Permintaan penarikan dikirim!', 'success');
+            document.getElementById('wdAmount').value = '';
+            refreshUserData();
+            loadUserProfile();
+        }
+
+        // ===== ADMIN =====
+        async function loadAdminDashboard() {
+            var adminResult = await supabase
+                .from('users')
+                .select('balance')
+                .eq('role', 'admin')
+                .single();
+
+            var admin = adminResult.data;
+            if (admin) {
+                document.getElementById('adminBalanceDisplay').innerText = formatRp(admin.balance || 0);
+            }
+
+            var usersResult = await supabase
+                .from('users')
+                .select('*')
+                .eq('role', 'user');
+
+            var allHistoryResult = await supabase
+                .from('tasks_history')
+                .select('*');
+
+            var pendingTasksResult = await supabase
+                .from('tasks_history')
+                .select('*')
+                .eq('status', 'pending');
+
+            var pendingWdResult = await supabase
+                .from('withdrawals')
+                .select('*')
+                .eq('status', 'pending');
+
+            var users = usersResult.data || [];
+            var allHistory = allHistoryResult.data || [];
+            var pendingTasks = pendingTasksResult.data || [];
+            var pendingWd = pendingWdResult.data || [];
+
+            var completed = 0;
+            for (var i = 0; i < allHistory.length; i++) {
+                if (allHistory[i].status === 'approved') completed++;
+            }
+
+            document.getElementById('adminStatUsers').innerText = users.length;
+            document.getElementById('adminStatCompleted').innerText = completed;
+            document.getElementById('adminStatPending').innerText = pendingTasks.length;
+            document.getElementById('adminStatWdPending').innerText = pendingWd.length;
+
+            var transResult = await supabase
+                .from('transactions')
+                .select('*')
+                .order('created_at', { ascending: false })
+                .limit(10);
+
+            var transactions = transResult.data || [];
+            var tHtml =
+                '<tr><th>Waktu</th><th>User</th><th>Jenis</th><th>Jumlah</th><th>Status</th></tr>';
+
+            if (transactions.length > 0) {
+                for (var i = 0; i < transactions.length; i++) {
+                    var t = transactions[i];
+                    var date = t.created_at ? new Date(t.created_at).toLocaleString('id-ID') : '-';
+                    var typeMap = {
+                        'deposit': 'Deposit',
+                        'withdraw': 'Tarik',
+                        'reward': 'Reward',
+                        'admin_deposit': 'Deposit Admin'
+                    };
+                    var isPositive = t.amount > 0;
+                    tHtml += '<tr>';
+                    tHtml += '<td>' + date + '</td>';
+                    tHtml += '<td><strong>' + t.username + '</strong></td>';
+                    tHtml += '<td>' + (typeMap[t.type] || t.type) + '</td>';
+                    tHtml += '<td style="color:' + (isPositive ? 'var(--success)' : 'var(--danger)') + ';">' + (isPositive ?
+                        '+' : '') + formatRp(t.amount) + '</td>';
+                    tHtml += '<td><span class="badge approved">Selesai</span></td>';
+                    tHtml += '</tr>';
+                }
+            } else {
+                tHtml +=
+                    '<tr><td colspan="5" style="text-align:center;color:var(--text-muted);">Belum ada transaksi</td></tr>';
+            }
+            document.getElementById('adminTransactionTable').innerHTML = tHtml;
+        }
+
+        async function adminDeposit() {
+            var amount = prompt('Masukkan nominal deposit (Rp):');
+            if (!amount) return;
+            var num = parseInt(amount);
+            if (num < 10000) {
+                showToast('Minimal deposit Rp 10.000', 'error');
+                return;
+            }
+
+            var adminResult = await supabase
+                .from('users')
+                .select('balance')
+                .eq('role', 'admin')
+                .single();
+
+            var admin = adminResult.data;
+            var newBalance = (admin ? admin.balance : 0) + num;
+            await supabase
+                .from('users')
+                .update({ balance: newBalance })
+                .eq('role', 'admin');
+
+            showToast('Deposit Rp ' + num.toLocaleString() + ' berhasil!', 'success');
+            loadAdminDashboard();
+        }
+
+        async function loadAdminData() {
+            var tasksResult = await supabase
+                .from('tasks_history')
+                .select('*')
+                .eq('status', 'pending')
+                .order('id', { ascending: false });
+
+            var tasks = tasksResult.data || [];
+            var tHtml = '<tr><th>User</th><th>Tugas</th><th>Bukti</th><th>Aksi</th></tr>';
+
+            for (var i = 0; i < tasks.length; i++) {
+                var t = tasks[i];
+                tHtml += '<tr><td><strong>' + t.username + '</strong></td>';
+                tHtml += '<td>' + t.task_name + '<br><small style="color:var(--success)">+' + formatRp(t.reward) +
+                    '</small></td>';
+                tHtml += '<td><img src="' + t.proof_image + '" class="proof-img" onclick="window.open(\'' + t
+                    .proof_image + '\')"></td>';
+                tHtml += '<td>';
+                tHtml += '<button class="btn btn-sm btn-success" style="margin-bottom:4px;" onclick="accTask(\'' + t.id +
+                    '\', \'' + t.username + '\', ' + t.reward + ')">Acc</button>';
+                tHtml += '<button class="btn btn-sm btn-danger" onclick="rejTask(\'' + t.id +
+                    '\')">Tolak</button>';
+                tHtml += '</td></tr>';
+            }
+
+            if (tasks.length === 0) {
+                tHtml +=
+                    '<tr><td colspan="4" style="text-align:center;color:var(--text-muted);">Tidak ada pending</td></tr>';
+            }
+            document.getElementById('adminTasksTable').innerHTML = tHtml;
+
+            var listResult = await supabase
+                .from('tasks_list')
+                .select('*')
+                .order('id', { ascending: false });
+
+            var taskList = listResult.data || [];
+            var tmHtml = '<tr><th>Tugas</th><th>Bayaran</th><th>Kuota</th><th>Aksi</th></tr>';
+
+            for (var i = 0; i < taskList.length; i++) {
+                var t = taskList[i];
+                tmHtml += '<tr><td>' + t.name + '</td>';
+                tmHtml += '<td style="color:var(--success)">' + formatRp(t.reward) + '</td>';
+                tmHtml += '<td><strong>' + t.quota + '</strong></td>';
+                tmHtml += '<td><button class="btn btn-sm btn-danger" onclick="adminDeleteTask(\'' + t.id +
+                    '\')">Hapus</button></td></tr>';
+            }
+
+            if (taskList.length === 0) {
+                tmHtml +=
+                    '<tr><td colspan="4" style="text-align:center;color:var(--text-muted);">Belum ada tugas</td></tr>';
+            }
+            document.getElementById('adminManageTasksTable').innerHTML = tmHtml;
+
+            var wdResult = await supabase
+                .from('withdrawals')
+                .select('*')
+                .eq('status', 'pending')
+                .order('id', { ascending: false });
+
+            var wds = wdResult.data || [];
+            var wHtml = '<tr><th>User</th><th>Data Tujuan</th><th>Nominal</th><th>Aksi</th></tr>';
+
+            for (var i = 0; i < wds.length; i++) {
+                var w = wds[i];
+                wHtml += '<tr><td><strong>' + w.username + '</strong></td>';
+                wHtml += '<td><span class="badge" style="background:var(--bg-main);color:var(--text-primary);">' + w
+                    .method + '</span><br>' + w.account_no + '<br><small>' + w.account_name + '</small></td>';
+                wHtml += '<td style="color:var(--success);font-weight:bold;">' + formatRp(w.amount) + '</td>';
+                wHtml += '<td>';
+                wHtml += '<button class="btn btn-sm btn-success" style="margin-bottom:4px;" onclick="accWd(\'' + w.id +
+                    '\', \'' + w.username + '\', ' + w.amount + ')">Kirim</button>';
+                wHtml += '<button class="btn btn-sm btn-danger" onclick="rejWd(\'' + w.id + '\', \'' + w.username +
+                    '\', ' + w.amount + ')">Tolak</button>';
+                wHtml += '</td></tr>';
+            }
+
+            if (wds.length === 0) {
+                wHtml +=
+                    '<tr><td colspan="4" style="text-align:center;color:var(--text-muted);">Tidak ada permintaan</td></tr>';
+            }
+            document.getElementById('adminWdTable').innerHTML = wHtml;
+        }
+
+        async function adminCreateTask() {
+            var n = document.getElementById('newTaskName').value.trim();
+            var r = parseInt(document.getElementById('newTaskReward').value);
+            var q = parseInt(document.getElementById('newTaskQuota').value);
+            var l = document.getElementById('newTaskLink').value.trim();
+
+            if (!n || !r || !q || !l) {
+                showToast('Isi semua data tugas!', 'error');
+                return;
+            }
+
+            await supabase.from('tasks_list').insert([{
+                name: n,
+                reward: r,
+                quota: q,
+                link: l
+            }]);
+
+            showToast('Tugas baru berhasil ditambahkan!', 'success');
+            document.getElementById('newTaskName').value = '';
+            document.getElementById('newTaskReward').value = '';
+            document.getElementById('newTaskQuota').value = '';
+            document.getElementById('newTaskLink').value = '';
+            loadAdminData();
+        }
+
+        async function adminDeleteTask(id) {
+            if (!confirm('Hapus tugas ini?')) return;
+            await supabase.from('tasks_list').delete().eq('id', id);
+            loadAdminData();
+        }
+
+        async function accTask(id, user, reward) {
+            await supabase
+                .from('tasks_history')
+                .update({ status: 'approved' })
+                .eq('id', id);
+
+            var userResult = await supabase
+                .from('users')
+                .select('balance')
+                .eq('username', user)
+                .single();
+
+            var u = userResult.data;
+            if (u) {
+                var newBalance = u.balance + reward;
+                await supabase
+                    .from('users')
+                    .update({ balance: newBalance })
+                    .eq('username', user);
+            }
+
+            showToast('Misi ' + user + ' disetujui! +' + formatRp(reward), 'success');
+            loadAdminData();
+            loadAdminDashboard();
+        }
+
+        async function rejTask(id) {
+            await supabase
+                .from('tasks_history')
+                .update({ status: 'rejected' })
+                .eq('id', id);
+            showToast('Misi ditolak', 'error');
+            loadAdminData();
+            loadAdminDashboard();
+        }
+
+        async function accWd(id, user, amount) {
+            await supabase
+                .from('withdrawals')
+                .update({ status: 'approved' })
+                .eq('id', id);
+            showToast('Penarikan ' + user + ' disetujui!', 'success');
+            loadAdminData();
+            loadAdminDashboard();
+        }
+
+        async function rejWd(id, user, amount) {
+            await supabase
+                .from('withdrawals')
+                .update({ status: 'rejected' })
+                .eq('id', id);
+
+            var userResult = await supabase
+                .from('users')
+                .select('balance')
+                .eq('username', user)
+                .single();
+
+            var u = userResult.data;
+            if (u) {
+                var newBalance = u.balance + amount;
+                await supabase
+                    .from('users')
+                    .update({ balance: newBalance })
+                    .eq('username', user);
+            }
+
+            var adminResult = await supabase
+                .from('users')
+                .select('balance')
+                .eq('role', 'admin')
+                .single();
+
+            var admin = adminResult.data;
+            if (admin) {
+                await supabase
+                    .from('users')
+                    .update({ balance: admin.balance + amount })
+                    .eq('role', 'admin');
+            }
+
+            showToast('Penarikan ' + user + ' ditolak', 'error');
+            loadAdminData();
+            loadAdminDashboard();
+        }
+    </script>
+</body>
+  </html>
